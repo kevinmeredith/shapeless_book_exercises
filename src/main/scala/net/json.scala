@@ -76,16 +76,21 @@ object JsonEncoder {
       hEncoder.value.encode(  generic.to(value) )
     }
 
-  implicit val cnilEncoder: JsonObjectEncoder[CNil] =
-    createObjectEncoder { cnil => throw new RuntimeException("Inconceivable!") }
-
-  implicit def coproductEncoder[H, T <: Coproduct](
-    implicit
-    hEncoder: Lazy[JsonObjectEncoder[H]],
-    tEncoder: JsonObjectEncoder[T]
-  ): JsonEncoder[H :+: T] = createObjectEncoder {
-    case Inl(h) => hEncoder.value.encode(h)
-    case Inr(t) => tEncoder.encode(t)
+  implicit val cnilObjectEncoder: JsonObjectEncoder[CNil] =
+    createObjectEncoder(cnil => throw new Exception("Inconceivable!"))
+  implicit def coproductObjectEncoder[K <: Symbol, H, T <: Coproduct](
+     implicit
+     witness: Witness.Aux[K],
+     hEncoder: Lazy[JsonEncoder[H]],
+     tEncoder: JsonObjectEncoder[T]
+   ): JsonObjectEncoder[FieldType[K, H] :+: T] = {
+    val typeName = witness.value.name
+    createObjectEncoder {
+      case Inl(h) =>
+        JsonObject(List(typeName -> hEncoder.value.encode(h)))
+      case Inr(t) =>
+        tEncoder.encode(t)
+    }
   }
 
 }
