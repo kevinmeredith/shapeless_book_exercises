@@ -5,19 +5,19 @@ import shapeless.{HList, HNil, ::}
 object Penultimate {
   type Aux[L <: HList, O] = Penultimate[L] { type Out = O }
 
+  def apply[H <: HList](implicit ev: Penultimate[H]): Aux[H, ev.Out] = ev
+
   implicit def secondToLast[H, G]: Aux[H :: G :: HNil, H] =
     new Penultimate[H :: G :: HNil] {
-      override type Out = H
-      override def apply(in: H :: G :: HNil): Out = in.head
+      type Out = H
+      def apply(in: H :: G :: HNil): Out = in.head
     }
 
-  implicit def inductive[H, T <: HList, OutT](
+  implicit def inductivePenultimate[H, T <: HList, OutT](
      implicit penult: Aux[T, OutT]
-  ): Penultimate[H :: T] = new Penultimate[::[H, T]] {
-
-    override type Out = OutT
-
-    override def apply(in: H :: T): Out = penult.apply(in.tail)
+  ): Aux[H :: T, OutT] = new Penultimate[H :: T] {
+    type Out = OutT
+    def apply(in: H :: T): Out = penult.apply(in.tail)
   }
 }
 

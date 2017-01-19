@@ -78,6 +78,7 @@ object JsonEncoder {
 
   implicit val cnilObjectEncoder: JsonObjectEncoder[CNil] =
     createObjectEncoder(cnil => throw new Exception("Inconceivable!"))
+
   implicit def coproductObjectEncoder[K <: Symbol, H, T <: Coproduct](
      implicit
      witness: Witness.Aux[K],
@@ -88,6 +89,7 @@ object JsonEncoder {
     createObjectEncoder {
       case Inl(h) =>
         JsonObject(List(typeName -> hEncoder.value.encode(h)))
+
       case Inr(t) =>
         tEncoder.encode(t)
     }
